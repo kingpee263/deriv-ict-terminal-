@@ -1,0 +1,5 @@
+{
+  "terminal.integrated.env.windows": {
+    "PATH": "C:\\Users\\Administrator\\.gemini\\antigravity\\scratch\\.tools\\node-v20.18.0-win-x64;${env:PATH}"
+  }
+}

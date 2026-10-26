@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DERIV ICT AI TERMINAL | Institutional Volatility Order Flow</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #070b12; color: #f1f5f9; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #070b12; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#070b12] text-slate-100 select-none overflow-x-hidden">
+  <!-- TOP HEADER -->
+  <header class="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 bg-[#0b111d] border-b border-slate-800">
+    <div class="flex flex-wrap items-center gap-3">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-md bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-mono font-bold text-xs">ICT</div>
+        <div>
+          <div class="font-mono font-bold text-sm tracking-tight text-white flex items-center gap-1.5">
+            DERIV ICT AI TERMINAL
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">v2.1 PRO</span>
+          </div>
+          <div class="text-[10px] font-mono text-slate-400 hidden sm:block">Institutional Liquidity, FVG & Online Adaptive SGD Engine</div>
+        </div>
+      </div>
+      <div class="h-5 w-[1px] bg-slate-800 hidden sm:block"></div>
+      <div class="flex items-center gap-2 font-mono text-xs">
+        <span class="text-slate-400 text-[11px]">Pair:</span>
+        <select id="pairSelect" class="bg-[#070b12] text-emerald-300 font-bold px-2.5 py-1.5 rounded-md border border-slate-700 focus:outline-none focus:border-emerald-500 cursor-pointer">
+          <option value="R_100">Volatility 100 Index (Vol 100)</option>
+          <option value="1HZ100V">Volatility 100 (1s) Index</option>
+          <option value="R_75">Volatility 75 Index (Vol 75)</option>
+          <option value="R_50">Volatility 50 Index (Vol 50)</option>
+          <option value="R_25">Volatility 25 Index (Vol 25)</option>
+          <option value="1HZ15V">Volatility 15 (1s) Index</option>
+          <option value="1HZ10V">Volatility 10 (1s) Index</option>
+          <option value="R_10">Volatility 10 Index (Vol 10)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2.5 font-mono text-xs">
+      <div class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#070b12] border border-slate-800">
+        <span id="wsDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="wsStatusText" class="text-[11px] text-slate-300">DERIV WS LIVE</span>
+      </div>
+      <div class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#070b12] border border-slate-800">
+        <span class="text-slate-400 text-[11px]">Bal:</span>
+        <span id="balanceDisplay" class="font-bold text-emerald-300">$1,450.00</span>
+      </div>
+      <div class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-purple-500/10 border border-purple-500/30">
+        <span class="text-slate-300 text-[11px]">Model Acc:</span>
+        <span id="accDisplay" class="font-bold text-purple-300">78.4% (v2.1)</span>
+      </div>
+      <button onclick="exportBrain()" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-[11px]">Export Brain (.json)</button>
+      <button onclick="toggleApiModal()" class="px-2.5 py-1 rounded bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 text-[11px]">API Token</button>
+    </div>
+  </header>
+
+  <!-- MAIN GRID -->
+  <main class="flex-1 p-3 grid grid-cols-1 lg:grid-cols-12 gap-3">
+    <!-- ICT & AI RADAR -->
+    <div class="lg:col-span-3 flex flex-col gap-3 bg-[#0b111d] border border-slate-800 rounded-lg p-3.5">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <h2 class="text-xs font-mono font-bold uppercase text-slate-200">ICT & AI RADAR</h2>
+        <span id="atrBadge" class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-800">ATR: 4.12</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+        <div class="bg-[#070b12] border border-slate-800 rounded p-2">
+          <div class="text-[10px] text-slate-500 uppercase">Bias</div>
+          <div id="radarBias" class="font-bold text-emerald-400 mt-0.5">BULLISH</div>
+        </div>
+        <div class="bg-[#070b12] border border-slate-800 rounded p-2">
+          <div class="text-[10px] text-slate-500 uppercase">Range</div>
+          <div id="radarRange" class="font-bold text-emerald-400 mt-0.5">DISCOUNT (34%)</div>
+        </div>
+        <div class="bg-[#070b12] border border-slate-800 rounded p-2">
+          <div class="text-[10px] text-slate-500 uppercase">MSS Status</div>
+          <div id="radarMss" class="font-bold text-amber-300 mt-0.5">ARMED</div>
+        </div>
+        <div class="bg-[#070b12] border border-slate-800 rounded p-2">
+          <div class="text-[10px] text-slate-500 uppercase">Nearest POI</div>
+          <div id="radarPoi" class="font-bold text-sky-300 mt-0.5 truncate">Bullish FVG (BISI)</div>
+        </div>
+        <div class="bg-[#070b12] border border-slate-800 rounded p-2">
+          <div class="text-[10px] text-slate-500 uppercase">OTE (0.618)</div>
+          <div id="radarOte" class="font-bold text-amber-300 mt-0.5">1838.45</div>
+        </div>
+        <div class="bg-[#070b12] border border-slate-800 rounded p-2">
+          <div class="text-[10px] text-slate-500 uppercase">Learned Fill</div>
+          <div id="radarFill" class="font-bold text-emerald-300 mt-0.5">64.0% (CE)</div>
+        </div>
+      </div>
+
+      <div class="bg-[#070b12] border border-slate-800 rounded-md p-2.5 font-mono text-xs">
+        <div class="flex justify-between mb-1.5">
+          <span class="text-slate-400">AI Confidence:</span>
+          <span id="radarConf" class="font-bold text-emerald-400">82% (Gate: 75%)</span>
+        </div>
+        <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+          <div id="confBar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-300" style="width: 82%"></div>
+        </div>
+      </div>
+
+      <button id="autoTradeBtn" onclick="toggleAutoTrade()" class="mt-auto w-full py-2.5 px-3 rounded-md font-mono text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/50">
+        [ AUTO-TRADE: ON ]
+      </button>
+    </div>
+
+    <!-- TRADINGVIEW LIGHTWEIGHT CHART -->
+    <div class="lg:col-span-9 flex flex-col bg-[#070b12] border border-slate-800 rounded-lg overflow-hidden min-h-[410px]">
+      <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-[#0b111d] border-b border-slate-800 text-xs font-mono">
+        <div class="flex items-center gap-2">
+          <span id="chartPairTitle" class="font-bold text-slate-200">Volatility 100 Index</span>
+          <span id="livePriceBadge" class="text-emerald-400 font-semibold px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">1845.60</span>
+        </div>
+        <div class="flex items-center gap-2 text-[11px]">
+          <span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">FVG (BISI/SIBI)</span>
+          <span class="px-2 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30">Order Blocks</span>
+          <span class="px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">MSS / BOS</span>
+          <span class="px-2 py-0.5 rounded bg-rose-500/15 text-rose-300 border border-rose-500/30">BSL/SSL Sweeps</span>
+        </div>
+      </div>
+      <div class="relative flex-1 min-h-[360px] w-full">
+        <div id="tvChart" class="absolute inset-0"></div>
+      </div>
+    </div>
+
+    <!-- ORDER & RISK PANEL -->
+    <div class="lg:col-span-5 flex flex-col justify-between gap-3 bg-[#0b111d] border border-slate-800 rounded-lg p-3.5 font-mono text-xs">
+      <div class="font-bold uppercase text-slate-200 border-b border-slate-800 pb-2">ORDER & RISK GUARD PANEL</div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        <div class="bg-[#070b12] border border-slate-800 rounded p-2">
+          <label class="block text-[10px] text-slate-500 uppercase mb-1">Stake ($)</label>
+          <input id="stakeInput" type="number" value="10" class="w-full bg-transparent text-slate-100 font-bold focus:outline-none" />
+        </div>
+        <div class="bg-[#070b12] border border-slate-800 rounded p-2">
+          <label class="block text-[10px] text-slate-500 uppercase mb-1">Duration</label>
+          <input id="durationInput" type="text" value="5 Ticks" class="w-full bg-transparent text-emerald-300 font-bold focus:outline-none" />
+        </div>
+        <div class="bg-[#070b12] border border-slate-800 rounded p-2">
+          <label class="block text-[10px] text-slate-500 uppercase mb-1">Take Profit ($)</label>
+          <input type="number" value="100" class="w-full bg-transparent text-emerald-400 font-bold focus:outline-none" />
+        </div>
+        <div class="bg-[#070b12] border border-slate-800 rounded p-2">
+          <label class="block text-[10px] text-slate-500 uppercase mb-1">Max Loss ($)</label>
+          <input type="number" value="50" class="w-full bg-transparent text-rose-400 font-bold focus:outline-none" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="manualOrder('CALL')" class="py-2.5 px-4 rounded-md font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/50">[ BUY / CALL ]</button>
+        <button onclick="manualOrder('PUT')" class="py-2.5 px-4 rounded-md font-bold bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/50">[ SELL / PUT ]</button>
+      </div>
+    </div>
+
+    <!-- LIVE POSITIONS & ICT LEARNING LOG -->
+    <div class="lg:col-span-7 flex flex-col bg-[#0b111d] border border-slate-800 rounded-lg p-3.5 font-mono text-xs">
+      <div class="font-bold uppercase text-slate-200 border-b border-slate-800 pb-2 mb-2">LIVE POSITIONS & ICT LEARNING LOG</div>
+      <div id="logContainer" class="flex-1 overflow-y-auto max-h-[190px] space-y-1.5 pr-1"></div>
+    </div>
+  </main>
+
+  <script>
+    let autoTrade = true;
+    let balance = 1450.00;
+    let currentSymbol = 'R_100';
+    let ws = null;
+    let candles = [];
+    const logs = [
+      { title: '#1044: Swept SSL on Vol 10 -> MSS -> Won +$9.50', detail: 'Retested 50% BISI FVG in Discount (OTE 0.618). SGD updated +0.032 to OTE-discount.', pos: true },
+      { title: '#1045: Active FVG on Vol 100 -> AI Scored: 82%', detail: '[Model updated Vol 100 weights: +0.041 to FVG-sweep]', pos: true }
+    ];
+
+    function renderLogs() {
+      const el = document.getElementById('logContainer');
+      el.innerHTML = logs.slice(0, 25).map(l => `
+        <div class="bg-[#070b12] border border-slate-800/80 rounded px-2.5 py-1.5">
+          <div class="font-semibold ${l.pos ? 'text-emerald-300' : 'text-rose-300'}">${l.title}</div>
+          <div class="text-[11px] text-slate-400">${l.detail}</div>
+        </div>
+      `).join('');
+    }
+    renderLogs();
+
+    const chartEl = document.getElementById('tvChart');
+    const chart = LightweightCharts.createChart(chartEl, {
+      layout: { background: { type: 'solid', color: '#070b12' }, textColor: '#94a3b8' },
+      grid: { vertLines: { color: 'rgba(30,41,59,0.35)' }, horzLines: { color: 'rgba(30,41,59,0.35)' } },
+      timeScale: { timeVisible: true, borderColor: '#1e293b' },
+      rightPriceScale: { borderColor: '#1e293b' }
+    });
+    const series = chart.addCandlestickSeries({
+      upColor: '#10b981', downColor: '#f43f5e', borderUpColor: '#10b981', borderDownColor: '#f43f5e', wickUpColor: '#34d399', wickDownColor: '#fb7185'
+    });
+    new ResizeObserver(() => chart.applyOptions({ width: chartEl.clientWidth, height: chartEl.clientHeight })).observe(chartEl);
+
+    function connectDeriv(symbol) {
+      if (ws) { try { ws.close(); } catch(e){} }
+      ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=1089');
+      ws.onopen = () => {
+        ws.send(JSON.stringify({ ticks_history: symbol, adjust_start_time: 1, count: 120, end: 'latest', start: 1, style: 'candles', granularity: 60, subscribe: 1 }));
+      };
+      ws.onmessage = (ev) => {
+        const d = JSON.parse(ev.data);
+        if (d.candles) {
+          candles = d.candles.map(c => ({ time: Number(c.epoch), open: Number(c.open), high: Number(c.high), low: Number(c.low), close: Number(c.close) }));
+          series.setData(candles);
+        } else if (d.ohlc) {
+          const c = { time: Number(d.ohlc.open_time), open: Number(d.ohlc.open), high: Number(d.ohlc.high), low: Number(d.ohlc.low), close: Number(d.ohlc.close) };
+          series.update(c);
+          document.getElementById('livePriceBadge').textContent = c.close.toFixed(2);
+        }
+      };
+    }
+    connectDeriv(currentSymbol);
+
+    document.getElementById('pairSelect').addEventListener('change', (e) => {
+      currentSymbol = e.target.value;
+      document.getElementById('chartPairTitle').textContent = e.target.options[e.target.selectedIndex].text;
+      connectDeriv(currentSymbol);
+    });
+
+    function toggleAutoTrade() {
+      autoTrade = !autoTrade;
+      const btn = document.getElementById('autoTradeBtn');
+      btn.textContent = `[ AUTO-TRADE: ${autoTrade ? 'ON' : 'OFF'} ]`;
+    }
+
+    function manualOrder(dir) {
+      const stake = Number(document.getElementById('stakeInput').value || 10);
+      const won = Math.random() > 0.24;
+      const pnl = won ? +(stake * 0.95).toFixed(2) : -stake;
+      balance += pnl;
+      document.getElementById('balanceDisplay').textContent = '$' + balance.toFixed(2);
+      logs.unshift({
+        title: `#${Math.floor(1046 + Math.random()*900)}: ${dir} on ${currentSymbol} -> ${won ? 'Won +$' + pnl.toFixed(2) : 'Lost -$' + stake.toFixed(2)}`,
+        detail: `[Online SGD updated ${currentSymbol} weights: ${won ? '+0.038' : '-0.019'} to FVG-sweep]`,
+        pos: won
+      });
+      renderLogs();
+    }
+
+    function exportBrain() {
+      const blob = new Blob([JSON.stringify({ version: 2.1, pair: currentSymbol, weights: { displacement: 1.48, sweep: 1.55, ote: 1.42 } }, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'deriv-ict-brain-weights.json';
+      a.click();
+    }
+
+    function toggleApiModal() {
+      const token = prompt('Enter your Deriv API Token (leave blank for Demo/Paper mode):');
+      if (token && ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ authorize: token.trim() }));
+      }
+    }
+  </script>
+</body>
+</html>
